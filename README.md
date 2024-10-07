@@ -308,5 +308,157 @@ python3 manage.py runserver
 http://127.0.0.1:8000/kjapp/members
 ```
 
+### Create Django REST API
+
+https://blog.logrocket.com/django-rest-framework-create-api/
+
+Django REST framework is based on Django’s class-based view
+
+```
+python3 manage.py startapp kjrest
+```
+
+#### Install
+
+```
+pip install django_rest_framework
+```
+
+rest_framework and new app to settings.py
+```
+vi project_1/project_1/settings.py
+
+INSTALLED_APPS = [
+    'rest_framework',                 <-----------------
+    'kjrest',                         <-----------------
+    'kjapp.apps.KjappConfig',
+    'django.contrib.admin',
+    'django.contrib.auth',
+```
+
+
+
+```
+vi project_1/kjrest/models.py
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('kjapp/', include('kjapp.urls')),
+    path('api-auth/', include('rest_framework.urls')),   <-----------------
+    path('kjrest/', include('kjrest.urls'))                <-----------------
+]
+```
+
+Create models
+```
+vi project_1/project_1/urls.py
+
+from django.db import models
+# Create your models here.
+from django.contrib.auth.models import User
+class Todo(models.Model):
+    task = models.CharField(max_length = 180)
+    timestamp = models.DateTimeField(auto_now_add = True, auto_now = False, blank = True)
+    completed = models.BooleanField(default = False, blank = True)
+    updated = models.DateTimeField(auto_now = True, blank = True)
+    user = models.ForeignKey(User, on_delete = models.CASCADE, blank = True, null = True)
+
+    def __str__(self):
+        return self.task
+```
+Add serializers. To convert the Model object to an API-appropriate format like JSON, Django REST framework uses the ModelSerializer class to convert any model to serialized JSON objects
+
+```
+vi project_1/kjrest/serializers.py
+
+from rest_framework import serializers
+from .models import Todo
+class TodoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Todo
+        fields = ["task", "completed", "timestamp", "updated", "user"]
+```
+
+List view:
+
+```
+# vi project_1/kjrest/views.py
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework import permissions
+from .models import Todo
+from .serializers import TodoSerializer
+
+class TodoListApiView(APIView):
+    # add permission to check if user is authenticated
+    permission_classes = [permissions.IsAuthenticated]
+
+    # 1. List all
+    def get(self, request, *args, **kwargs):
+        '''
+        List all the todo items for given requested user
+        '''
+        todos = Todo.objects.filter(user = request.user.id)
+        serializer = TodoSerializer(todos, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # 2. Create
+    def post(self, request, *args, **kwargs):
+        '''
+        Create the Todo with given todo data
+        '''
+        data = {
+            'task': request.data.get('task'), 
+            'completed': request.data.get('completed'), 
+            'user': request.user.id
+        }
+        serializer = TodoSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+```
+
+Create an endpoint for the class-based view above:
+
+```
+vi project_1/kjrest/urls.py
+
+from django.urls import path, include
+from .views import (
+    TodoListApiView,
+)
+urlpatterns = [
+    path('api', TodoListApiView.as_view()),
+]
+```
+
+After creating the model, migrate it to the database:
+```  
+python3 manage.py makemigrations
+python3 manage.py migrate
+```
+
+Create superuser
+```
+python3 manage.py createsuperuser  
+```
+
+run and test
+```
+python3 manage.py runserver
+http://127.0.0.1:8000/kjrest/api
+```
+
+After you login, add new tasks by copy-and paste this content:
+```
+{
+    "task": "New Task",
+    "completed": false
+}
+```
+
 ## The Definitive Guide to Django: Web Development Done Right by Adrian Holovaty, Jacob K. Moss
 

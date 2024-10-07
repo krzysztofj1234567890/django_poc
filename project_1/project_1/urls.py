@@ -19,5 +19,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('kjapp/', include('kjapp.urls'))
+    path('kjapp/', include('kjapp.urls')),
+    path('api-auth/', include('rest_framework.urls')),
+    path('kjrest/', include('kjrest.urls')),
 ]
