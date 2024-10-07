@@ -20,9 +20,13 @@ deactivate
 ```
 
 ### install Django
-
 ```
 pip install django
+```
+
+check version:
+```
+django-admin --version
 ```
 
 ### Create a new Django project
@@ -104,6 +108,10 @@ urlpatterns = [
     path('', views.index)
 ]
 ```
+
+##### Views 
+
+Django views are Python functions that take http requests and return http response, like HTML documents.
 
 Edit the file kjapp/views.py so it looks like this:
 ```
@@ -197,6 +205,108 @@ def age(request, age):
     return render(request, 'kjapp/age.html', data)
 ```
 
+### Models
+
+The models.py file contains a description of the database table, as a Python class. 
+This is called a model. 
+Using this class, you can create, retrieve, update, and delete records in your database using simple Python code rather than writing repetitive SQL statements.
+
+```
+vi project_1/kjapp/models.py
+
+from django.db import models
+class Member(models.Model):
+  firstname = models.CharField(max_length=255)
+  lastname = models.CharField(max_length=255)
+```
+
+run a command to actually create the table in the database:
+```
+python3 manage.py makemigrations kjapp 
+```
+
+Django creates a file describing the changes and stores the file in the /migrations/ folder.
+
+Run the migrate command to  create and execute an SQL statement, based on the content of the new file in the /migrations/ folder:
+```
+python3 manage.py migrate 
+```
+
+check:
+```
+python3 manage.py sqlmigrate kjapp 0001
+```
+
+Use the Python interpreter (Python shell) to add some members:
+```
+python3 manage.py shell 
+
+from kjapp.models import Member 
+member = Member(firstname='Emil', lastname='Refsnes')
+member.save() 
+Member.objects.all().values() 
+```
+
+Add template:
+```
+vi project_1/kjapp/templates/kjapp/all_members.html
+
+<!DOCTYPE html>
+<html>
+<body>
+<h1>Members</h1> 
+<ul>
+  {% for x in mymembers %}
+    <li>{{ x.firstname }} {{ x.lastname }}</li>
+  {% endfor %}
+</ul>
+</body>
+</html>
+
+```
+
+Update view:
+```
+vi project_1/kjapp/views.py
+
+from django.shortcuts import render
+# Create your views here.
+from django.http import HttpResponse
+from django.template import loader                  <--------
+from .models import Member                          <--------
+def index(request):
+    return HttpResponse("Hello, world!")
+def year(request, year):
+    return HttpResponse('Year: {}'.format(year))
+def age(request, age):
+    data = {'age':age}
+    return render(request, 'kjapp/age.html', data)
+def members(request):                                   <--------
+  mymembers = Member.objects.all().values()             
+  template = loader.get_template('all_members.html')
+  context = {
+    'mymembers': mymembers,
+  }
+  return HttpResponse(template.render(context, request))
+```
+
+Update urls:
+```
+vi project_1/kjapp/urls.py
+
+urlpatterns = [
+    path('', views.index),
+    path('year/<int:year>', views.year),
+    path('age/<int:age>', views.age),
+    path('members', views.members)                     <--------
+]
+```
+
+restart the server and test it:
+```
+python3 manage.py runserver
+http://127.0.0.1:8000/kjapp/members
+```
 
 ## The Definitive Guide to Django: Web Development Done Right by Adrian Holovaty, Jacob K. Moss
 
