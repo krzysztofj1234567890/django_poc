@@ -168,6 +168,11 @@ http://127.0.0.1:8000/kjapp/year/2010
 
 Django’s built-in template language can be used to generate web pages from data.
 
+Useful django templates:
+- linebreaks - better formatting of html text
+- truncatewords - truncate words
+- urlize - change it to url
+
 Templates used by Django apps are stored in a directory that is central to the project: project_1/kjapp/templates/kjapp/
 
 ```
@@ -313,6 +318,31 @@ http://127.0.0.1:8000/kjapp/members
 https://blog.logrocket.com/django-rest-framework-create-api/
 
 Django REST framework is based on Django’s class-based view
+
+Steps to create REST API in Django:
+- install django
+- install djangorestframework
+- create django project
+  - configure project with djangorestframework
+- create django app - api
+  - create views in api-app
+    - use decorators like @api_view(['GET'])
+  - create urls in api-app that define routes routes
+    - create urlpatterns
+  - create model objects in models.py file like 'Item'
+    - run and apply migrations
+    - add serializers.py that define how to serialize our model objects like 'class ItemSerizlizer(serializers.ModelSerializer)
+      - define model class and all fields you want to serialize
+    - change the views.py and add the serilizer
+
+To connect django to PostgreSQL database on AWS RDS
+- install psycopg2
+- edit settings.py and add database connection details
+
+To connect django to mongodb
+- django was created tfor rdbms, not noSQL
+
+Create an application
 
 ```
 python3 manage.py startapp kjrest
